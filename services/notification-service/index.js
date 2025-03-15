@@ -1,4 +1,4 @@
-// services/notification-service/index.js
+
 import "dotenv/config";
 import { Kafka } from "kafkajs";
 import mongoose from "mongoose";
@@ -8,7 +8,7 @@ import express from "express";
 const app = express();
 app.use(express.json());
 
-// 1. Connect to MongoDB (optional if you want to store notifications)
+
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://localhost:27017/notification-service-db";
 mongoose
@@ -21,7 +21,6 @@ mongoose
     console.error("Notification Service MongoDB connection error:", err)
   );
 
-// Notification Schema
 const notificationSchema = new mongoose.Schema({
   email: String,
   message: String,
@@ -29,7 +28,6 @@ const notificationSchema = new mongoose.Schema({
 });
 const Notification = mongoose.model("Notification", notificationSchema);
 
-// Nodemailer setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -38,7 +36,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Kafka setup
+
 const kafka = new Kafka({
   clientId: "notification-service",
   brokers: ["localhost:9092"],
@@ -55,7 +53,7 @@ const run = async () => {
 
       const emailContent = `Transaction of $${transaction.amount} to ${transaction.toUser} is ${transaction.status}`;
 
-      // Send email
+
       await transporter.sendMail({
         from: "your-email@gmail.com",
         to: transaction.fromUser,
@@ -63,7 +61,6 @@ const run = async () => {
         text: emailContent,
       });
 
-      // Log notification in database
       await Notification.create({
         email: transaction.fromUser,
         message: emailContent,
@@ -72,7 +69,7 @@ const run = async () => {
   });
 };
 
-// 1️⃣ Route to fetch notification logs
+
 app.get("/notifications/:email", async (req, res) => {
   const logs = await Notification.find({ email: req.params.email });
   res.json(logs);
