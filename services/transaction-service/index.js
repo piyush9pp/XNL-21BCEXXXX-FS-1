@@ -1,4 +1,3 @@
-
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -11,7 +10,6 @@ import { Configuration, PlaidApi, PlaidEnvironments } from "plaid";
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 
 mongoose
   .connect("mongodb://localhost:27017/transaction-service-db", {
@@ -70,7 +68,6 @@ app.post("/transactions", async (req, res) => {
         .json({ message: "User has not linked a bank account" });
     }
 
- 
     const transactionId = uuidv4();
     const transactionEvent = {
       id: transactionId,
@@ -98,10 +95,8 @@ app.post("/transactions", async (req, res) => {
       transactionEvent.status = "FAILED";
     }
 
-
     const newTransaction = new Transaction(transactionEvent);
     await newTransaction.save();
-
 
     await producer.connect();
     await producer.send({
@@ -124,4 +119,3 @@ app.post("/transactions", async (req, res) => {
 
 // Start Server
 app.listen(3002, () => console.log("Transaction Service running on 3002"));
-
