@@ -1,4 +1,4 @@
-// services/user-service/index.js
+
 import "dotenv/config";
 import express from "express";
 import bcrypt from "bcrypt";
@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Connect to MongoDB
+
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://localhost:27017/user-service-db";
 mongoose
@@ -22,7 +22,7 @@ mongoose
   .then(() => console.log("User Service connected to MongoDB"))
   .catch((err) => console.error("User Service MongoDB connection error:", err));
 
-// User Schema
+
 const userSchema = new mongoose.Schema({
   email: String,
   password: String,
@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
-// Plaid Configuration
+
 const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
 const PLAID_SECRET = process.env.PLAID_SECRET;
 const PLAID_ENV = process.env.PLAID_ENV; // Get the env from env variables.
@@ -52,7 +52,7 @@ const configuration = new Configuration({
 
 const plaidClient = new PlaidApi(configuration);
 
-// 1️⃣ Route to generate Plaid link token (frontend will use this to open Plaid)
+
 app.post("/create-link-token", async (req, res) => {
   try {
     const response = await plaidClient.linkTokenCreate({
@@ -70,7 +70,6 @@ app.post("/create-link-token", async (req, res) => {
   }
 });
 
-// 2️⃣ Route to exchange public token for an access token
 app.post("/exchange-token", async (req, res) => {
   const { public_token, email } = req.body;
 
@@ -80,11 +79,10 @@ app.post("/exchange-token", async (req, res) => {
     });
     const { access_token } = tokenResponse.data;
 
-    // Fetch account details
     const accountsResponse = await plaidClient.accountsGet({ access_token });
     const account = accountsResponse.data.accounts[0];
 
-    // Save user bank details
+
     await User.findOneAndUpdate(
       { email },
       {
@@ -107,7 +105,6 @@ app.post("/exchange-token", async (req, res) => {
   }
 });
 
-// 3️⃣ Before processing a transaction, check if user has a linked bank account
 app.get("/check-bank/:email", async (req, res) => {
   const user = await User.findOne({ email: req.params.email });
 
@@ -118,7 +115,6 @@ app.get("/check-bank/:email", async (req, res) => {
   }
 });
 
-// Signup
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -128,10 +124,10 @@ app.post("/signup", async (req, res) => {
       return res.status(400).send("User already exists");
     }
 
-    // Hash password
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create and save user
+
     const newUser = new User({ email, password: hashedPassword });
     await newUser.save();
 
@@ -142,24 +138,21 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).send("Invalid credentials");
     }
 
-    // Compare password
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).send("Invalid credentials");
     }
 
-    // Generate JWT
+
     const token = jwt.sign({ email }, "secret_key", { expiresIn: "1h" });
     res.json({ token });
   } catch (error) {
