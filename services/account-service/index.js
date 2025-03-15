@@ -1,4 +1,4 @@
-// services/user-service/index.js
+
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Connect to MongoDB
+
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://localhost:27017/account-service-db";
 console.log(process.env.MONGO_URI);
@@ -23,7 +23,7 @@ mongoose
     console.error("Account Service MongoDB connection error:", err)
   );
 
-// 2. Define a Transaction schema and model
+
 const transactionSchema = new mongoose.Schema({
   id: String,
   fromUser: String,
@@ -35,7 +35,7 @@ const transactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 
-// Endpoint to store transactions
+
 app.post("/transactions", async (req, res) => {
   try {
     const transactionData = req.body;
